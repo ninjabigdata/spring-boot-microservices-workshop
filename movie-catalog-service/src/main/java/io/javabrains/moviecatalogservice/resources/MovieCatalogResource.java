@@ -2,9 +2,9 @@ package io.javabrains.moviecatalogservice.resources;
 
 import io.javabrains.moviecatalogservice.models.CatalogItem;
 import io.javabrains.moviecatalogservice.models.Movie;
-import io.javabrains.moviecatalogservice.models.Rating;
 import io.javabrains.moviecatalogservice.models.UserRating;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,13 +23,14 @@ public class MovieCatalogResource {
 
     private final RestTemplate restTemplate;
     private final WebClient.Builder webClientBuilder;
+    private final DiscoveryClient discoveryClient;
 
     @GetMapping("{userId}")
     public List<CatalogItem> getCatalog(@PathVariable("userId") String userId) {
 
         // Get all rates movie ids
         UserRating userRating = restTemplate.getForObject(
-                "http://localhost:8083/api/rating/user/" + userId,
+                "http://rating-data-service/api/rating/user/" + userId,
                 UserRating.class);
 
         // For each movie id call movie info service and get details
@@ -39,7 +40,7 @@ public class MovieCatalogResource {
                 .map(
                         rating -> {
                             Movie movie = restTemplate.getForObject(
-                                    "http://localhost:8082/api/movie/" + rating.getMovieId(),
+                                    "http://movie-info-service/api/movie/" + rating.getMovieId(),
                                     Movie.class);
 
                             //Movie movie = webClientBuilder
